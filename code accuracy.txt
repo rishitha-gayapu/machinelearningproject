@@ -1,0 +1,66 @@
+[1]import numpy as np
+import pandas as pd 
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.style.use('ggplot')
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn import metrics
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import roc_curve, auc
+from sklearn.metrics import classification_report
+
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+[2]df = pd.read_csv('/online_shoppers_intention.csv')
+[3]print(df.isnull().sum())
+[4]df.Revenue = df.Revenue.astype('int')
+df.Weekend = df.Weekend.astype('int')
+[5]df.head(3)
+[6]df.info()
+[7]dff = pd.concat([df,pd.get_dummies(df['Month'], prefix='Month')], axis=1).drop(['Month'],axis=1)
+dff = pd.concat([dff,pd.get_dummies(dff['VisitorType'], prefix='VisitorType')], axis=1).drop(['VisitorType'],axis=1)
+print(dff.info())
+[8]y = dff['Revenue']
+X = dff.drop(['Revenue'], axis=1)
+[9]X_train, X_valtest, y_train, y_valtest = train_test_split(X, y, test_size=0.3, random_state=101)
+X_val, X_test, y_val, y_test = train_test_split(X_valtest, y_valtest, test_size=0.5, random_state=101)
+[10]sc_X = StandardScaler()
+
+Xsc_train = sc_X.fit_transform(X_train)
+Xsc_val = sc_X.fit_transform(X_val)
+Xsc_test = sc_X.fit_transform(X_test)
+[11]nbm = GaussianNB()
+nbm.fit(X_train,y_train)
+nbm_pred = nbm.predict(X_val)
+
+print('Gaussian Naive Bayes Performance:')
+print('---------------------------------')
+print('Accuracy        : ', metrics.accuracy_score(y_val, nbm_pred))
+print('F1 Score        : ', metrics.f1_score(y_val, nbm_pred))
+print('Precision       : ', metrics.precision_score(y_val, nbm_pred))
+print('Recall          : ', metrics.recall_score(y_val, nbm_pred))
+print('Confusion Matrix:\n ', confusion_matrix(y_val, nbm_pred))
+[12]knn = KNeighborsClassifier(n_neighbors=5,weights='uniform',leaf_size=30,p=2) #default values
+knn.fit(Xsc_train,y_train)
+knn_pred = knn.predict(Xsc_val)
+
+print('K-Nearest Neighbor Initial Performance:')
+print('---------------------------------------')
+print('Accuracy        : ', metrics.accuracy_score(y_val, knn_pred))
+print('F1 Score        : ', metrics.f1_score(y_val, knn_pred))
+print('Precision       : ', metrics.precision_score(y_val, knn_pred))
+print('Recall          : ', metrics.recall_score(y_val, knn_pred))
+print('Confusion Matrix:\n ', confusion_matrix(y_val, knn_pred))
